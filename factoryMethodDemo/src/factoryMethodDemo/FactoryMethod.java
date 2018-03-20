@@ -1,6 +1,5 @@
 package factoryMethodDemo;
 
-import java.io.File;
 import java.io.InputStream;
 
 import javafx.application.Application;
@@ -17,7 +16,11 @@ import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Slider;
 import javafx.scene.image.Image;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Box;
 import javafx.scene.shape.Cylinder;
@@ -36,6 +39,7 @@ public class FactoryMethod extends Application {
 	final String BOX = "Box";
 	final String CYL = "Cylinder";
 	final String SPH = "Sphere";
+	final String TRI = "Triangular Prism";
 	Slider xSlider;
 	Slider ySlider;
 	Slider zSlider;
@@ -52,7 +56,7 @@ public class FactoryMethod extends Application {
 		//setupCamera(scene);
 		/* Set the Stage */
 		stage.setScene(scene);
-		stage.setMinHeight(scene.getHeight() + 10);
+		stage.setMinHeight(scene.getHeight() + 20);
 		stage.setMinWidth(scene.getWidth() + 10);
 		stage.setTitle("Factory Demo");
 		stage.show();
@@ -71,18 +75,24 @@ public class FactoryMethod extends Application {
 	public void buildBoxes() {
 		mainBox = new VBox();
 		shapeBox = new VBox();
+		Insets inset = new Insets(5,10,5,10);
 		mainBox.setAlignment(Pos.TOP_CENTER);
+		mainBox.setBackground(new Background(new BackgroundFill(Color.color(.1f, .1f, .15f), CornerRadii.EMPTY, Insets.EMPTY)));
 		shapeBox.setPadding(new Insets(50,50,50,50));
 		shapeBox.setAlignment(Pos.BOTTOM_CENTER);
 		/* Create the slides */
-		xSlider = new Slider(0, 3.14, 0);
-		ySlider = new Slider(0, 3.14, 0);
-		zSlider = new Slider(0, 3.14, 0);
-		
+		xSlider = new Slider(0, 3.6, 0);
+		ySlider = new Slider(0, 3.6, 0);
+		zSlider = new Slider(0, 3.6, 0);
+		xSlider.setPadding(inset);
+		ySlider.setPadding(inset);
+		zSlider.setPadding(inset);
+		/*Add the items to the combobox*/
 		ObservableList<String> options = 
-			    FXCollections.observableArrayList(BOX, CYL, SPH);
+			    FXCollections.observableArrayList(BOX, CYL, SPH, TRI);
 		ComboBox combo = new ComboBox (options);
 		combo.autosize();
+		//set the default value
 		combo.setValue(BOX);
 
 		mainBox.getChildren().addAll(xSlider, ySlider, zSlider, combo, shapeBox);
@@ -97,7 +107,7 @@ public class FactoryMethod extends Application {
 		    factoryMethod(combo.getSelectionModel().getSelectedItem().toString());    
 		});
 		
-		// slider for rotation
+		// slider for x rotation
 		xSlider.valueProperty().addListener(new ChangeListener<Number>() {
 			public void changed(ObservableValue<? extends Number> ov, Number old_val, Number new_val) {
 				if (new_val.doubleValue() < old_val.doubleValue())
@@ -106,7 +116,7 @@ public class FactoryMethod extends Application {
 					rotateIt(Rotate.X_AXIS, new_val.doubleValue());
 			}
 		});
-		// slider for rotation
+		// slider for y rotation
 		ySlider.valueProperty().addListener(new ChangeListener<Number>() {
 			public void changed(ObservableValue<? extends Number> ov, Number old_val, Number new_val) {
 				if (new_val.doubleValue() < old_val.doubleValue())
@@ -115,7 +125,7 @@ public class FactoryMethod extends Application {
 					rotateIt(Rotate.Y_AXIS, new_val.doubleValue());
 			}
 		});
-		// slider for rotation
+		// slider for z rotation
 		zSlider.valueProperty().addListener(new ChangeListener<Number>() {
 			public void changed(ObservableValue<? extends Number> ov, Number old_val, Number new_val) {
 				if (new_val.doubleValue() < old_val.doubleValue())
@@ -127,6 +137,9 @@ public class FactoryMethod extends Application {
 		
 	}	
 	
+	
+	/* The whole point of this exercise. The factory method that instantiates
+	 * the class appropriately */
 	private void factoryMethod(String type) {
 
 		switch (type){
@@ -134,11 +147,13 @@ public class FactoryMethod extends Application {
 			shape = new Box(200,200,200);
 			break;
 		case CYL:
-			shape = new Cylinder(200, 200, 100);
+			shape = new Cylinder(150, 300, 300);
 			break;
 		case SPH:
-			shape = new Sphere(150);
-			setEarth();
+			shape = new Earth(150);
+			break;
+		case TRI:
+			shape = new Prism(150,300);
 			break;
 		default:
 			shape = new Box(100,100,100);
@@ -150,20 +165,39 @@ public class FactoryMethod extends Application {
 		shapeBox.getChildren().add(shape);		
 	}
 	
+	/*Class that extends the cylinder to show a triangular prism*/
+	public class Prism extends Cylinder{
+		
+		public Prism(double rad, double height) {
+			//create a cylinder with 3 sides
+			super(rad, height, 3);
+		}
+	}
+	
+	/*Class that extends the Sphere to prove a point with the factory method*/
+	public class Earth extends Sphere{
+		public Earth(double rad) {
+			super(rad);
+			setEarth(this);
+		}
+	}
+	
+	/*Method to reset the sliders to 0*/
 	private void resetSlides() {
 		xSlider.setValue(0);
 		ySlider.setValue(0);;
 		zSlider.setValue(0);
 	}
+	
+	/*method that rotates based on slider input*/
 	private void rotateIt(Point3D dir, double val) {
 		Rotate rotateAbout = new Rotate(val, dir);
 		shape.getTransforms().add(rotateAbout);
 	}
 	
 	
-	
-
-	private void setEarth() {
+	/*This method applies the earth skin to the sphere*/
+	private void setEarth(Shape3D earth) {
 
 	  InputStream diffuse = getClass().getClassLoader().getResourceAsStream("texture.jpg");
 	  InputStream bump = getClass().getClassLoader().getResourceAsStream("normal.jpg");
@@ -180,7 +214,7 @@ public class FactoryMethod extends Application {
 	    	new Image(specular)
 	    );
 
-	    shape.setMaterial(
+	    earth.setMaterial(
 	        earthMaterial
 	    );
 	}
