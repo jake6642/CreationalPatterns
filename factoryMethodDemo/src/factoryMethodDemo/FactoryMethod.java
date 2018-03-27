@@ -1,6 +1,7 @@
 package factoryMethodDemo;
 
 import java.io.InputStream;
+import factoryMethodDemo.BuildShape;
 
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
@@ -32,15 +33,12 @@ import javafx.stage.Stage;
 public class FactoryMethod extends Application {
 
 	// globally declared shape
-	Shape3D shape;
+
 
 	VBox mainBox;
 	VBox shapeBox;
 	ComboBox combo;
-	final String BOX = "Box";
-	final String CYL = "Cylinder";
-	final String SPH = "Sphere";
-	final String TRI = "Triangular Prism";
+	BuildShape buildShape;
 	Slider xSlider;
 	Slider ySlider;
 	Slider zSlider;
@@ -63,12 +61,11 @@ public class FactoryMethod extends Application {
 		stage.show();
 	}
 
-	public void buildShape(String type) {
-		shape = factoryMethod(type);
-	}
+	
 	
 	@SuppressWarnings("unchecked")
 	public void setListeners() {
+		
 		// listener for combobox
 		combo.setOnAction((Event ev) -> {
 			if (shapeBox.getChildren().size() > 0) {
@@ -76,44 +73,45 @@ public class FactoryMethod extends Application {
 			}
 			String shapeType = combo.getSelectionModel().getSelectedItem().toString();
 /************* The whole point of this exercise***************/			
-			buildShape(shapeType);
+			buildShape.buildShap(shapeType);
 /*************************************************************/			
 			resetSlides();
-			shape.setTranslateY(100);
-			shapeBox.getChildren().add(shape);
+			buildShape.shape.setTranslateY(100);
+			shapeBox.getChildren().add(buildShape.shape);
 		});
 
 		// slider for x rotation
 		xSlider.valueProperty().addListener(new ChangeListener<Number>() {
 			public void changed(ObservableValue<? extends Number> ov, Number old_val, Number new_val) {
 				if (new_val.doubleValue() < old_val.doubleValue())
-					rotateIt(Rotate.X_AXIS, -new_val.doubleValue());
+				buildShape.rotateIt(Rotate.X_AXIS, -new_val.doubleValue());
 				else
-					rotateIt(Rotate.X_AXIS, new_val.doubleValue());
+					buildShape.rotateIt(Rotate.X_AXIS, new_val.doubleValue());
 			}
 		});
 		// slider for y rotation
 		ySlider.valueProperty().addListener(new ChangeListener<Number>() {
 			public void changed(ObservableValue<? extends Number> ov, Number old_val, Number new_val) {
 				if (new_val.doubleValue() < old_val.doubleValue())
-					rotateIt(Rotate.Y_AXIS, -new_val.doubleValue());
+					buildShape.rotateIt(Rotate.Y_AXIS, -new_val.doubleValue());
 				else
-					rotateIt(Rotate.Y_AXIS, new_val.doubleValue());
+					buildShape.rotateIt(Rotate.Y_AXIS, new_val.doubleValue());
 			}
 		});
 		// slider for z rotation
 		zSlider.valueProperty().addListener(new ChangeListener<Number>() {
 			public void changed(ObservableValue<? extends Number> ov, Number old_val, Number new_val) {
 				if (new_val.doubleValue() < old_val.doubleValue())
-					rotateIt(Rotate.Z_AXIS, -new_val.doubleValue());
+					buildShape.rotateIt(Rotate.Z_AXIS, -new_val.doubleValue());
 				else
-					rotateIt(Rotate.Z_AXIS, new_val.doubleValue());
+					buildShape.rotateIt(Rotate.Z_AXIS, new_val.doubleValue());
 			}
 		});
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void buildBoxes() {
+		BuildShape buildShape = new BuildShape();
 		mainBox = new VBox();
 		shapeBox = new VBox();
 		Insets inset = new Insets(5, 10, 5, 10);
@@ -130,17 +128,17 @@ public class FactoryMethod extends Application {
 		ySlider.setPadding(inset);
 		zSlider.setPadding(inset);
 		/* Add the items to the combobox */
-		ObservableList<String> options = FXCollections.observableArrayList(BOX, CYL, SPH, TRI);
+		ObservableList<String> options = FXCollections.observableArrayList(buildShape.BOX, buildShape.CYL, buildShape.SPH, buildShape.TRI);
 		combo = new ComboBox(options);
 		combo.autosize();
 		// set the default value
-		combo.setValue(BOX);
+		combo.setValue(buildShape.BOX);
 
 		mainBox.getChildren().addAll(xSlider, ySlider, zSlider, combo, shapeBox);
-		shape = factoryMethod(BOX);
+		buildShape.shape = buildShape.factoryMethod(buildShape.BOX);
 		resetSlides();
-		shape.setTranslateY(100);
-		shapeBox.getChildren().add(shape);
+		buildShape.shape.setTranslateY(100);
+		shapeBox.getChildren().add(buildShape.shape);
 
 	}
 
@@ -148,37 +146,10 @@ public class FactoryMethod extends Application {
 	 * The whole point of this exercise. The factory method that instantiates the
 	 * class appropriately
 	 */
-	Shape3D factoryMethod(String type) {
-		switch (type) {
-		case BOX:
-			return new Box(200, 200, 200);
-		case CYL:
-			return new Cylinder(150, 300, 300);
-		case SPH:
-			return new Earth(150);
-		case TRI:
-			return new Prism(150, 300);
-		default:
-			return new Box();
-		}
-	}
+	
 
 	/* Class that extends the cylinder to show a triangular prism */
-	public class Prism extends Cylinder {
-
-		public Prism(double rad, double height) {
-			// create a cylinder with 3 sides
-			super(rad, height, 3);
-		}
-	}
-
-	/* Class that extends the Sphere to prove a point with the factory method */
-	public class Earth extends Sphere {
-		public Earth(double rad) {
-			super(rad);
-			setEarth(this);
-		}
-	}
+	
 
 	/* Method to reset the sliders to 0 */
 	private void resetSlides() {
@@ -188,23 +159,8 @@ public class FactoryMethod extends Application {
 	}
 
 	/* method that rotates based on slider input */
-	private void rotateIt(Point3D dir, double val) {
-		Rotate rotateAbout = new Rotate(val, dir);
-		shape.getTransforms().add(rotateAbout);
-	}
+	
 
 	/* This method applies the earth skin to the sphere */
-	private void setEarth(Shape3D earth) {
-
-		InputStream diffuse = getClass().getClassLoader().getResourceAsStream("texture.jpg");
-		InputStream bump = getClass().getClassLoader().getResourceAsStream("normal.jpg");
-		InputStream specular = getClass().getClassLoader().getResourceAsStream("specular.jpg");
-
-		PhongMaterial earthMaterial = new PhongMaterial();
-		earthMaterial.setDiffuseMap(new Image(diffuse));
-		earthMaterial.setBumpMap(new Image(bump));
-		earthMaterial.setSpecularMap(new Image(specular));
-
-		earth.setMaterial(earthMaterial);
-	}
+	
 }
